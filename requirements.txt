@@ -1,0 +1,4 @@
+ccxt==4.3.95
+python-telegram-bot==20.7
+pandas==2.2.1
+matplotlib==3.8.3

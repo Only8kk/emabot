@@ -740,8 +740,10 @@ async def post_init(app):
 
 # ================= TELEGRAM COMMANDS =================
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.effective_chat:
+        return
     save_subscriber(str(update.effective_chat.id))
-    await update.message.reply_text(
+    await safe_reply(update,
         "✅ *EMA Pullback + HH Retest Bot*\n\n"
         "Subscribed to signals.\n\n"
         "*Setups:*\n"
@@ -762,22 +764,38 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
 
+async def safe_reply(update: Update, text: str, **kwargs):
+    """Safely reply in both private chats and groups."""
+    try:
+        if update.message:
+            await update.message.reply_text(text, **kwargs)
+        elif update.effective_chat:
+            await update.effective_chat.send_message(text, **kwargs)
+    except Exception as e:
+        log(f"Reply error: {e}")
+
 async def cmd_stop(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.effective_chat:
+        return
     remove_subscriber(str(update.effective_chat.id))
-    await update.message.reply_text("❌ Unsubscribed. /start to resubscribe.")
+    await safe_reply(update, "❌ Unsubscribed. /start to resubscribe.")
 
 async def cmd_scan(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.effective_chat:
+        return
     cid = str(update.effective_chat.id)
     key = f"manual_{cid}"
     if key in ALERT_MEMORY and time.time() - ALERT_MEMORY[key] < 120:
-        await update.message.reply_text("⏱ Wait 2 min between manual scans.")
+        await safe_reply(update, "⏱ Wait 2 min between manual scans.")
         return
     ALERT_MEMORY[key] = time.time()
-    await update.message.reply_text("⚡ Scanning all timeframes...")
+    await safe_reply(update, "⚡ Scanning all timeframes...")
     await run_scan(context)
-    await update.message.reply_text("✅ Done!")
+    await safe_reply(update, "✅ Done!")
 
 async def cmd_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.effective_chat:
+        return
     today      = datetime.now().strftime("%Y-%m-%d")
     today_sigs = []
     if os.path.exists(SIGNAL_LOG_FILE):
@@ -800,7 +818,7 @@ async def cmd_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
         with open(SIGNAL_LOG_FILE) as f:
             total_all = sum(1 for _ in f) - 1
 
-    await update.message.reply_text(
+    await safe_reply(update,
         f"📊 *Stats — {today}*\n\n"
         f"*By setup:*\n"
         f"⚡ EMA Pullback: `{ema_count}`\n"
@@ -813,7 +831,9 @@ async def cmd_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
+    if not update.effective_chat:
+        return
+    await safe_reply(update,
         "📖 *How to trade signals*\n\n"
         "*EMA Pullback:*\n"
         "Price dipped to EMA in uptrend and bounced.\n"

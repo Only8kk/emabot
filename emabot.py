@@ -735,17 +735,17 @@ async def scan_loop(context: ContextTypes.DEFAULT_TYPE):
         await asyncio.sleep(SCAN_INTERVAL)
 
 async def post_init(app):
-    # Schedule the scan loop as a repeating job using job_queue
-    # This is more reliable than asyncio.create_task on hosted environments
+    print("=== POST INIT CALLED ===", flush=True)
     app.job_queue.run_repeating(
         scan_job,
         interval=SCAN_INTERVAL,
-        first=10  # start 10 seconds after bot launches
+        first=10
     )
+    print("=== SCAN JOB SCHEDULED ===", flush=True)
     log("✅ Scan job scheduled")
 
 async def scan_job(context: ContextTypes.DEFAULT_TYPE):
-    """Wrapper for job_queue — catches all errors so loop never dies."""
+    print("=== SCAN JOB FIRED ===", flush=True)
     try:
         await run_scan(context)
     except Exception as e:

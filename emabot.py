@@ -735,7 +735,21 @@ async def scan_loop(context: ContextTypes.DEFAULT_TYPE):
         await asyncio.sleep(SCAN_INTERVAL)
 
 async def post_init(app):
-    asyncio.create_task(scan_loop(app))
+    # Schedule the scan loop as a repeating job using job_queue
+    # This is more reliable than asyncio.create_task on hosted environments
+    app.job_queue.run_repeating(
+        scan_job,
+        interval=SCAN_INTERVAL,
+        first=10  # start 10 seconds after bot launches
+    )
+    log("✅ Scan job scheduled")
+
+async def scan_job(context: ContextTypes.DEFAULT_TYPE):
+    """Wrapper for job_queue — catches all errors so loop never dies."""
+    try:
+        await run_scan(context)
+    except Exception as e:
+        log(f"Scan job error: {e}")
 
 
 # ================= TELEGRAM COMMANDS =================
@@ -866,7 +880,7 @@ def main():
     app.add_handler(CommandHandler("scan",  cmd_scan))
     app.add_handler(CommandHandler("stats", cmd_stats))
     app.add_handler(CommandHandler("help",  cmd_help))
-    app.run_polling()
+    app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
     main()

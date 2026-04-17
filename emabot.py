@@ -868,19 +868,27 @@ async def cmd_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ================= MAIN =================
 def main():
+    print("=== EMABOT STARTING ===", flush=True)
+    print(f"BOT_TOKEN set: {bool(BOT_TOKEN)}", flush=True)
     log("🚀 Bot starting...")
-    app = (
-        Application.builder()
-        .token(BOT_TOKEN)
-        .post_init(post_init)
-        .build()
-    )
-    app.add_handler(CommandHandler("start", cmd_start))
-    app.add_handler(CommandHandler("stop",  cmd_stop))
-    app.add_handler(CommandHandler("scan",  cmd_scan))
-    app.add_handler(CommandHandler("stats", cmd_stats))
-    app.add_handler(CommandHandler("help",  cmd_help))
-    app.run_polling(drop_pending_updates=True)
+    try:
+        app = (
+            Application.builder()
+            .token(BOT_TOKEN)
+            .post_init(post_init)
+            .build()
+        )
+        print("=== APP BUILT ===", flush=True)
+        app.add_handler(CommandHandler("start", cmd_start))
+        app.add_handler(CommandHandler("stop",  cmd_stop))
+        app.add_handler(CommandHandler("scan",  cmd_scan))
+        app.add_handler(CommandHandler("stats", cmd_stats))
+        app.add_handler(CommandHandler("help",  cmd_help))
+        print("=== HANDLERS ADDED, STARTING POLLING ===", flush=True)
+        app.run_polling(drop_pending_updates=True)
+    except Exception as e:
+        print(f"=== FATAL ERROR: {e} ===", flush=True)
+        raise
 
 if __name__ == "__main__":
     main()

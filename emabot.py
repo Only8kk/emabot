@@ -14,7 +14,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 # ================= CONFIG =================
-BOT_TOKEN = "8221222358:AAGVqmSx1b4LnCxiRyzU8bKEqEqKDny8-BM"
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "8221222358:AAGVqmSx1b4LnCxiRyzU8bKEqEqKDny8-BM")
 SUBSCRIBERS_FILE = "subscribers.txt"
 SIGNAL_LOG_FILE  = "signal_log_ema.csv"
 
